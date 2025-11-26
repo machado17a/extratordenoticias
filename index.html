@@ -330,25 +330,58 @@
                     'Título não encontrado';
 
             const subtitleSelectors = [
-                'h2',
                 '.subtitle',
                 '.sub-title',
                 '.subheading',
+                '.sub-heading',
                 '.lead',
                 '.deck',
+                '.standfirst',
                 '.article-subtitle',
+                '.article-subheading',
+                '.post-subtitle',
+                '.article-deck',
+                '.summary',
+                'h2.subtitle',
                 'p.subtitle',
                 'p.lead',
-                '[property="og:description"]',
-                'meta[name="description"]'
+                '[class*="subtitle"]',
+                '[class*="subheading"]',
+                '[class*="lead"]',
+                '[class*="deck"]'
             ];
 
             for (let selector of subtitleSelectors) {
                 const element = doc.querySelector(selector);
                 if (element) {
-                    subtitle = element.getAttribute('content') || element.textContent?.trim() || '';
+                    subtitle = element.textContent?.trim() || '';
                     if (subtitle && subtitle !== title && subtitle.length > 10 && subtitle.length < 500) break;
                 }
+            }
+
+            if (!subtitle && h1Element) {
+                let nextElement = h1Element.nextElementSibling;
+                let attempts = 0;
+                while (nextElement && attempts < 5) {
+                    const tagName = nextElement.tagName;
+                    if (tagName === 'H2' || tagName === 'P' ||
+                        (tagName === 'DIV' && nextElement.children.length === 0)) {
+                        const text = nextElement.textContent?.trim();
+                        if (text && text.length > 15 && text.length < 500 &&
+                            text !== title && !text.match(/^(por|by|de|data|publicado)\s+/i)) {
+                            subtitle = text;
+                            break;
+                        }
+                    }
+                    nextElement = nextElement.nextElementSibling;
+                    attempts++;
+                }
+            }
+
+            if (!subtitle) {
+                const ogDesc = doc.querySelector('[property="og:description"]')?.getAttribute('content');
+                const metaDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content');
+                subtitle = ogDesc || metaDesc || '';
             }
 
             const dateSelectors = [
@@ -357,8 +390,12 @@
                 '.published-date',
                 '.post-date',
                 '.date',
+                '.article-date',
+                '.publish-date',
                 '[property="article:published_time"]',
-                'meta[property="article:published_time"]'
+                'meta[property="article:published_time"]',
+                '[class*="date"]',
+                '[class*="publish"]'
             ];
 
             for (let selector of dateSelectors) {
@@ -379,9 +416,12 @@
                 '.by-author',
                 '.article-author',
                 '.post-author',
+                '.writer',
                 '[itemprop="author"]',
                 '[property="article:author"]',
                 'meta[name="author"]',
+                '[class*="author"]',
+                '[class*="byline"]',
                 'a[rel="author"]'
             ];
 
@@ -390,18 +430,32 @@
                 if (element) {
                     author = element.getAttribute('content') || element.textContent?.trim();
                     if (author) {
-                        author = author.replace(/^(por|by|de|escrito por|written by)[\s:]+/i, '').trim();
+                        author = author.replace(/^(por|by|de|escrito por|written by|autor|author)[\s:]+/i, '').trim();
                         if (author.length > 2 && author.length < 100) break;
                     }
                 }
             }
 
             if (!author) {
-                const bodyText = doc.body.textContent;
-                const authorPattern = /(?:Por|por)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ][a-zàáâãäåæçèéêëìíîï]+(?:\s+[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏa-zàáâãäåæçèéêëìíîï]+)+)/;
-                const match = bodyText.match(authorPattern);
-                if (match && match[1]) {
-                    author = match[1].trim();
+                const allElements = doc.querySelectorAll('p, span, div');
+                const authorPatterns = [
+                    /^(?:Por|por|POR)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ][a-zàáâãäåæçèéêëìíîï]+(?:\s+[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏa-zàáâãäåæçèéêëìíîï]+)+)/,
+                    /^(?:By|BY|by)\s+([A-Z][a-z]+(?:\s+[A-Za-z]+)+)/,
+                    /^(?:De|DE)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ][a-zàáâãäåæçèéêëìíîï]+(?:\s+[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏa-zàáâãäåæçèéêëìíîï]+)+)/
+                ];
+
+                for (let element of allElements) {
+                    const text = element.textContent?.trim();
+                    if (text && text.length < 100) {
+                        for (let pattern of authorPatterns) {
+                            const match = text.match(pattern);
+                            if (match && match[1]) {
+                                author = match[1].trim();
+                                if (author.length > 2 && author.length < 100) break;
+                            }
+                        }
+                        if (author) break;
+                    }
                 }
             }
 
@@ -412,7 +466,9 @@
                 '.entry-content',
                 '.content',
                 'main article',
-                '[itemprop="articleBody"]'
+                '[itemprop="articleBody"]',
+                '.article-body',
+                '.post-body'
             ];
 
             let contentElement = null;
@@ -443,7 +499,7 @@
         function displayArticle(data) {
             document.getElementById('articleTitle').textContent = data.title;
             document.getElementById('articleSubtitle').textContent = data.subtitle;
-            
+
             const dateElement = document.getElementById('articleDate');
             if (data.date) {
                 dateElement.innerHTML = `<span class="meta-label">Data:</span> ${formatDate(data.date)}`;
@@ -464,7 +520,7 @@
             if (data.content) {
                 contentElement.setAttribute('data-raw-content', data.content);
                 const paragraphs = data.content.split('\n\n');
-                contentElement.innerHTML = paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+                contentElement.innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
             } else {
                 contentElement.innerHTML = '<p><em>Não foi possível extrair o conteúdo completo da matéria.</em></p>';
             }
