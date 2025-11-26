@@ -497,8 +497,7 @@
                 const allParagraphs = doc.querySelectorAll('p');
                 const contentArray = Array.from(allParagraphs)
                     .map(p => p.textContent.trim())
-                    .filter(text => text.length > 50)
-                    .slice(0, 20);
+                    .filter(text => text.length > 30);
                 content = contentArray.join('\n\n');
             }
 
@@ -527,8 +526,9 @@
 
             const contentElement = document.getElementById('articleContent');
             if (data.content) {
+                contentElement.setAttribute('data-raw-content', data.content);
                 const paragraphs = data.content.split('\n\n');
-                contentElement.innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+                contentElement.innerHTML = paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('');
             } else {
                 contentElement.innerHTML = '<p><em>Não foi possível extrair o conteúdo completo da matéria.</em></p>';
             }
@@ -552,13 +552,14 @@
         }
 
         function copyContent() {
-            const data = {
-                title: document.getElementById('articleTitle').textContent,
-                subtitle: document.getElementById('articleSubtitle').textContent,
-                date: document.getElementById('articleDate').textContent.replace('Data:', '').trim(),
-                author: document.getElementById('articleAuthor').textContent.replace('Autor:', '').trim(),
-                content: document.getElementById('articleContent').textContent
-            };
+            const title = document.getElementById('articleTitle').textContent;
+            const subtitle = document.getElementById('articleSubtitle').textContent;
+            const dateText = document.getElementById('articleDate').textContent.replace('Data:', '').trim();
+            const authorText = document.getElementById('articleAuthor').textContent.replace('Autor:', '').trim();
+
+            const contentElement = document.getElementById('articleContent');
+            const rawContent = contentElement.getAttribute('data-raw-content');
+            const content = rawContent || Array.from(contentElement.querySelectorAll('p')).map(p => p.textContent.trim()).filter(t => t.length > 0).join('\n\n');
 
             let textToCopy = '';
 
@@ -566,21 +567,23 @@
                 textToCopy += `${originalUrl}\n\n`;
             }
 
-            textToCopy += `*${data.title}*\n\n`;
+            textToCopy += `*${title}*\n\n`;
 
-            if (data.subtitle) {
-                textToCopy += `_${data.subtitle}_\n\n`;
+            if (subtitle) {
+                textToCopy += `_${subtitle}_\n\n`;
             }
 
-            if (data.date) {
-                textToCopy += `${data.date}\n`;
+            if (dateText) {
+                textToCopy += `${dateText}\n`;
             }
 
-            if (data.author) {
-                textToCopy += `${data.author}\n`;
+            if (authorText) {
+                textToCopy += `${authorText}\n`;
             }
 
-            textToCopy += `\n${data.content}`;
+            if (content) {
+                textToCopy += `\n${content}`;
+            }
 
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const originalText = copyBtn.textContent;
