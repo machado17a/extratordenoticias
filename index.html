@@ -330,58 +330,25 @@
                     'Título não encontrado';
 
             const subtitleSelectors = [
+                'h2',
                 '.subtitle',
                 '.sub-title',
                 '.subheading',
-                '.sub-heading',
                 '.lead',
                 '.deck',
-                '.standfirst',
                 '.article-subtitle',
-                '.article-subheading',
-                '.post-subtitle',
-                '.article-deck',
-                '.summary',
-                'h2.subtitle',
                 'p.subtitle',
                 'p.lead',
-                '[class*="subtitle"]',
-                '[class*="subheading"]',
-                '[class*="lead"]',
-                '[class*="deck"]',
-                '[class*="standfirst"]'
+                '[property="og:description"]',
+                'meta[name="description"]'
             ];
 
             for (let selector of subtitleSelectors) {
                 const element = doc.querySelector(selector);
                 if (element) {
-                    subtitle = element.textContent?.trim() || '';
+                    subtitle = element.getAttribute('content') || element.textContent?.trim() || '';
                     if (subtitle && subtitle !== title && subtitle.length > 10 && subtitle.length < 500) break;
                 }
-            }
-
-            if (!subtitle && h1Element) {
-                let nextElement = h1Element.nextElementSibling;
-                let attempts = 0;
-                while (nextElement && attempts < 5) {
-                    if (nextElement.tagName === 'H2' ||
-                        nextElement.tagName === 'P' ||
-                        (nextElement.tagName === 'DIV' && nextElement.children.length === 0)) {
-                        const text = nextElement.textContent?.trim();
-                        if (text && text.length > 20 && text.length < 500 && text !== title && !text.match(/^(por|by|de)\s+/i)) {
-                            subtitle = text;
-                            break;
-                        }
-                    }
-                    nextElement = nextElement.nextElementSibling;
-                    attempts++;
-                }
-            }
-
-            if (!subtitle) {
-                const ogDesc = doc.querySelector('[property="og:description"]')?.getAttribute('content');
-                const metaDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content');
-                subtitle = ogDesc || metaDesc || '';
             }
 
             const dateSelectors = [
@@ -390,13 +357,8 @@
                 '.published-date',
                 '.post-date',
                 '.date',
-                '.article-date',
-                '.publish-date',
                 '[property="article:published_time"]',
-                'meta[property="article:published_time"]',
-                '[class*="date"]',
-                '[class*="time"]',
-                '[class*="publish"]'
+                'meta[property="article:published_time"]'
             ];
 
             for (let selector of dateSelectors) {
@@ -417,17 +379,10 @@
                 '.by-author',
                 '.article-author',
                 '.post-author',
-                '.writer',
-                '.reporter',
                 '[itemprop="author"]',
                 '[property="article:author"]',
                 'meta[name="author"]',
-                '[class*="author"]',
-                '[class*="byline"]',
-                '[class*="writer"]',
-                'a[rel="author"]',
-                'span.author',
-                'div.author'
+                'a[rel="author"]'
             ];
 
             for (let selector of authorSelectors) {
@@ -435,33 +390,18 @@
                 if (element) {
                     author = element.getAttribute('content') || element.textContent?.trim();
                     if (author) {
-                        author = author.replace(/^(por|by|de|escrito por|written by|autor|author)[\s:]+/i, '').trim();
+                        author = author.replace(/^(por|by|de|escrito por|written by)[\s:]+/i, '').trim();
                         if (author.length > 2 && author.length < 100) break;
                     }
                 }
             }
 
             if (!author) {
-                const allElements = doc.querySelectorAll('p, span, div');
-                const authorPatterns = [
-                    /^(?:Por|por|POR)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ][a-zàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]+(?:\s+[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞA-zàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]+)+)/,
-                    /^(?:By|BY|by)\s+([A-Z][a-z]+(?:\s+[A-Za-z]+)+)/,
-                    /^(?:De|DE)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ][a-zàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]+(?:\s+[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞA-zàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]+)+)/,
-                    /(?:Autor|Author|Escrito por|Written by):\s*([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ][a-zàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]+(?:\s+[A-Za-zàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ]+)+)/i
-                ];
-
-                for (let element of allElements) {
-                    const text = element.textContent?.trim();
-                    if (text && text.length < 100) {
-                        for (let pattern of authorPatterns) {
-                            const match = text.match(pattern);
-                            if (match && match[1]) {
-                                author = match[1].trim();
-                                if (author.length > 2 && author.length < 100) break;
-                            }
-                        }
-                        if (author) break;
-                    }
+                const bodyText = doc.body.textContent;
+                const authorPattern = /(?:Por|por)\s+([A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ][a-zàáâãäåæçèéêëìíîï]+(?:\s+[A-ZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏa-zàáâãäåæçèéêëìíîï]+)+)/;
+                const match = bodyText.match(authorPattern);
+                if (match && match[1]) {
+                    author = match[1].trim();
                 }
             }
 
@@ -472,11 +412,7 @@
                 '.entry-content',
                 '.content',
                 'main article',
-                '[itemprop="articleBody"]',
-                '.article-body',
-                '.post-body',
-                '[class*="article-text"]',
-                '[class*="post-text"]'
+                '[itemprop="articleBody"]'
             ];
 
             let contentElement = null;
@@ -489,15 +425,15 @@
                 const paragraphs = contentElement.querySelectorAll('p');
                 const contentArray = Array.from(paragraphs)
                     .map(p => p.textContent.trim())
-                    .filter(text => text.length > 50);
+                    .filter(text => text.length > 40);
                 content = contentArray.join('\n\n');
             }
 
-            if (!content) {
+            if (!content || content.length < 200) {
                 const allParagraphs = doc.querySelectorAll('p');
                 const contentArray = Array.from(allParagraphs)
                     .map(p => p.textContent.trim())
-                    .filter(text => text.length > 30);
+                    .filter(text => text.length > 40);
                 content = contentArray.join('\n\n');
             }
 
