@@ -265,6 +265,8 @@
         const resultBox = document.getElementById('resultBox');
         const copyBtn = document.getElementById('copyBtn');
 
+        let originalUrl = '';
+
         extractBtn.addEventListener('click', extractArticle);
         urlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') extractArticle();
@@ -273,7 +275,7 @@
 
         async function extractArticle() {
             const url = urlInput.value.trim();
-            
+
             if (!url) {
                 showError('Por favor, insira uma URL válida');
                 return;
@@ -284,6 +286,8 @@
                 return;
             }
 
+            originalUrl = url;
+
             hideError();
             resultBox.classList.remove('show');
             loading.style.display = 'block';
@@ -292,7 +296,7 @@
             try {
                 const proxyUrl = 'https://api.allorigins.win/raw?url=';
                 const response = await fetch(proxyUrl + encodeURIComponent(url));
-                
+
                 if (!response.ok) {
                     throw new Error('Erro ao acessar a URL');
                 }
@@ -556,10 +560,26 @@
                 content: document.getElementById('articleContent').textContent
             };
 
-            let textToCopy = `**${data.title}**\n\n`;
-            if (data.subtitle) textToCopy += `*${data.subtitle}*\n\n`;
-            if (data.date) textToCopy += `${data.date}\n`;
-            if (data.author) textToCopy += `${data.author}\n`;
+            let textToCopy = '';
+
+            if (originalUrl) {
+                textToCopy += `${originalUrl}\n\n`;
+            }
+
+            textToCopy += `*${data.title}*\n\n`;
+
+            if (data.subtitle) {
+                textToCopy += `_${data.subtitle}_\n\n`;
+            }
+
+            if (data.date) {
+                textToCopy += `${data.date}\n`;
+            }
+
+            if (data.author) {
+                textToCopy += `${data.author}\n`;
+            }
+
             textToCopy += `\n${data.content}`;
 
             navigator.clipboard.writeText(textToCopy).then(() => {
