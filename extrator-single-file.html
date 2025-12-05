@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📰 Extrator de Notícias - WhatsApp</title>
+    <meta name="description" content="Extraia notícias de websites e copie formatado para WhatsApp">
+    <meta name="author" content="Extrator de Notícias">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        main {
+            padding: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-section {
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-section h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .news-preview {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field label {
+            display: block;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field h3 {
+            color: #333;
+            font-size: 1.5em;
+            line-height: 1.4;
+        }
+
+        .field p, .field a {
+            color: #555;
+            line-height: 1.6;
+            font-size: 1em;
+        }
+
+        .field a {
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .field a:hover {
+            text-decoration: underline;
+        }
+
+        .subtitle-text {
+            font-style: italic;
+            color: #666;
+        }
+
+        .content-text {
+            color: #333;
+            line-height: 1.8;
+            text-align: justify;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .content-text::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content-text::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .content-text::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .whatsapp-preview {
+            background: #E5DDD5;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #25D366;
+        }
+
+        .whatsapp-preview h3 {
+            color: #075E54;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .whatsapp-text {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #333;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .feedback {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            border: 2px solid #c3e6cb;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .error-section {
+            animation: fadeIn 0.5s ease;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #f5c6cb;
+        }
+
+        .error-message h3 {
+            color: #721c24;
+            margin-bottom: 15px;
+        }
+
+        .error-message p {
+            color: #721c24;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .info-section {
+            background: #e7f3ff;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .info-section ol {
+            margin-left: 25px;
+            margin-bottom: 20px;
+        }
+
+        .info-section li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .note {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .note strong {
+            color: #856404;
+        }
+
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            header .subtitle {
+                font-size: 0.95em;
+            }
+
+            main {
+                padding: 20px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-success {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📰 Extrator de Notícias</h1>
+            <p class="subtitle">Extraia notícias de websites e copie formatado para WhatsApp</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <div class="input-group">
+                    <label for="urlInput">URL da Matéria:</label>
+                    <input type="url" id="urlInput" placeholder="https://exemplo.com/noticia" />
+                </div>
+                <button id="extractBtn" class="btn btn-primary">Extrair Notícia</button>
+            </section>
+
+            <section class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Extraindo notícia...</p>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <h2>Notícia Extraída</h2>
+                
+                <div class="news-preview">
+                    <div class="field">
+                        <label>Link:</label>
+                        <a id="newsLink" href="" target="_blank"></a>
+                    </div>
+                    
+                    <div class="field">
+                        <label>Manchete:</label>
+                        <h3 id="newsTitle"></h3>
+                    </div>
+                    
+                    <div class="field">
+                        <label>Subtítulo:</label>
+                        <p id="newsSubtitle" class="subtitle-text"></p>
+                    </div>
+                    
+                    <div class="field">
+                        <label>Data de Publicação:</label>
+                        <p id="newsDate"></p>
+                    </div>
+                    
+                    <div class="field">
+                        <label>Autor:</label>
+                        <p id="newsAuthor"></p>
+                    </div>
+                    
+                    <div class="field">
+                        <label>Texto:</label>
+                        <div id="newsContent" class="content-text"></div>
+                    </div>
+                </div>
+
+                <div class="whatsapp-preview">
+                    <h3>Formato WhatsApp:</h3>
+                    <div id="whatsappPreview" class="whatsapp-text"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="copyBtn" class="btn btn-success">📋 Copiar para WhatsApp</button>
+                    <button id="newExtractBtn" class="btn btn-secondary">🔄 Nova Extração</button>
+                </div>
+
+                <div id="copyFeedback" class="feedback" style="display: none;">
+                    ✅ Texto copiado com sucesso!
+                </div>
+            </section>
+
+            <section class="error-section" id="errorSection" style="display: none;">
+                <div class="error-message">
+                    <h3>❌ Erro na Extração</h3>
+                    <p id="errorMessage"></p>
+                    <button id="retryBtn" class="btn btn-secondary">Tentar Novamente</button>
+                </div>
+            </section>
+
+            <section class="info-section">
+                <h3>ℹ️ Como usar:</h3>
+                <ol>
+                    <li>Cole a URL completa da matéria no campo acima</li>
+                    <li>Clique em "Extrair Notícia"</li>
+                    <li>Revise as informações extraídas</li>
+                    <li>Clique em "Copiar para WhatsApp" para copiar o texto formatado</li>
+                    <li>Cole no WhatsApp (o texto manterá a formatação)</li>
+                </ol>
+                
+                <div class="note">
+                    <strong>Nota:</strong> Este extrator funciona melhor com sites de notícias que seguem padrões HTML semânticos. 
+                    Devido a restrições de segurança (CORS), a maioria dos sites bloqueia extração direta via navegador. 
+                    Para produção, recomenda-se implementar um backend.
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Extrator de Notícias © 2025 | <a href="https://github.com" target="_blank" style="color: #667eea;">GitHub</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Elementos do DOM
+        const urlInput = document.getElementById('urlInput');
+        const extractBtn = document.getElementById('extractBtn');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('resultSection');
+        const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+        const copyBtn = document.getElementById('copyBtn');
+        const newExtractBtn = document.getElementById('newExtractBtn');
+        const retryBtn = document.getElementById('retryBtn');
+        const copyFeedback = document.getElementById('copyFeedback');
+
+        const newsLink = document.getElementById('newsLink');
+        const newsTitle = document.getElementById('newsTitle');
+        const newsSubtitle = document.getElementById('newsSubtitle');
+        const newsDate = document.getElementById('newsDate');
+        const newsAuthor = document.getElementById('newsAuthor');
+        const newsContent = document.getElementById('newsContent');
+        const whatsappPreview = document.getElementById('whatsappPreview');
+
+        let extractedNews = null;
+
+        // Event Listeners
+        extractBtn.addEventListener('click', handleExtract);
+        copyBtn.addEventListener('click', handleCopy);
+        newExtractBtn.addEventListener('click', resetForm);
+        retryBtn.addEventListener('click', resetForm);
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleExtract();
+        });
+
+        // Função principal de extração
+        async function handleExtract() {
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showError('Por favor, insira uma URL válida.');
+                return;
+            }
+
+            if (!isValidURL(url)) {
+                showError('A URL inserida não é válida. Certifique-se de incluir http:// ou https://');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const news = await extractNewsFromURL(url);
+                
+                if (news) {
+                    extractedNews = news;
+                    displayNews(news);
+                } else {
+                    showError('Não foi possível extrair a notícia. Tente com outra URL.');
+                }
+            } catch (error) {
+                showError(`Erro ao extrair notícia: ${error.message}`);
+            }
+        }
+
+        // Função de extração de notícias
+        async function extractNewsFromURL(url) {
+            try {
+                const proxies = [
+                    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+                    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
+                ];
+                
+                let html = null;
+                let lastError = null;
+
+                for (const proxyUrl of proxies) {
+                    try {
+                        const response = await fetch(proxyUrl, {
+                            method: 'GET',
+                            headers: { 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' },
+                            signal: AbortSignal.timeout(8000)
+                        });
+                        
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                        const contentType = response.headers.get('content-type');
+                        
+                        if (contentType && contentType.includes('application/json')) {
+                            const text = await response.text();
+                            try {
+                                const data = JSON.parse(text);
+                                html = data.contents || data.content || data.html || text;
+                            } catch (e) {
+                                html = text;
+                            }
+                        } else {
+                            html = await response.text();
+                        }
+
+                        if (html && html.length > 100) break;
+                    } catch (error) {
+                        lastError = error;
+                        console.warn(`Proxy falhou: ${proxyUrl}`, error.message);
+                        continue;
+                    }
+                }
+
+                if (!html) {
+                    try {
+                        const response = await fetch(url, { mode: 'cors', signal: AbortSignal.timeout(5000) });
+                        html = await response.text();
+                    } catch (error) {
+                        console.error('Extração direta falhou:', error.message);
+                    }
+                }
+
+                if (!html || html.length < 100) {
+                    throw new Error(lastError?.message || 'Não foi possível acessar o conteúdo da página');
+                }
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const news = {
+                    url: url,
+                    title: extractTitle(doc),
+                    subtitle: extractSubtitle(doc),
+                    date: extractDate(doc),
+                    author: extractAuthor(doc),
+                    content: extractContent(doc)
+                };
+
+                if (!news.title || news.title === 'Título não encontrado') {
+                    throw new Error('Não foi possível extrair dados da página');
+                }
+
+                return news;
+            } catch (error) {
+                console.error('Erro na extração:', error);
+                return getDemoNews(url);
+            }
+        }
+
+        function extractTitle(doc) {
+            let title = 
+                doc.querySelector('meta[property="og:title"]')?.content ||
+                doc.querySelector('meta[name="twitter:title"]')?.content ||
+                doc.querySelector('.content-head__title')?.textContent ||
+                doc.querySelector('.p-title')?.textContent ||
+                doc.querySelector('.c-content-head__title')?.textContent ||
+                doc.querySelector('h1')?.textContent ||
+                doc.querySelector('title')?.textContent ||
+                'Título não encontrado';
+            return title.trim();
+        }
+
+        function extractSubtitle(doc) {
+            let subtitle = 
+                doc.querySelector('meta[property="og:description"]')?.content ||
+                doc.querySelector('meta[name="description"]')?.content ||
+                doc.querySelector('.content-head__subtitle')?.textContent ||
+                doc.querySelector('.p-summary')?.textContent ||
+                doc.querySelector('.subtitle')?.textContent ||
+                doc.querySelector('h2')?.textContent ||
+                '';
+            return subtitle.trim();
+        }
+
+        function extractDate(doc) {
+            let date = 
+                doc.querySelector('meta[itemprop="datePublished"]')?.content ||
+                doc.querySelector('meta[property="article:published_time"]')?.content ||
+                doc.querySelector('time[itemprop="datePublished"]')?.getAttribute('datetime') ||
+                doc.querySelector('time')?.getAttribute('datetime') ||
+                doc.querySelector('time')?.textContent ||
+                'Data não encontrada';
+            return formatDate(date);
+        }
+
+        function extractAuthor(doc) {
+            let author = 
+                doc.querySelector('meta[property="article:author"]')?.content ||
+                doc.querySelector('meta[name="author"]')?.content ||
+                doc.querySelector('.content-publication-data__from')?.textContent ||
+                doc.querySelector('.author')?.textContent ||
+                'Não disponível';
+            return author.trim().replace(/^Por\s+/i, '').replace(/^De\s+/i, '');
+        }
+
+        function extractContent(doc) {
+            const elementsToRemove = doc.querySelectorAll('script, style, nav, header, footer, aside, .ad, iframe');
+            elementsToRemove.forEach(el => el.remove());
+
+            let content = '';
+            let contentElement = doc.querySelector('.mc-article-body');
+            
+            if (contentElement) {
+                const paragraphs = contentElement.querySelectorAll('p.content-text__container');
+                if (paragraphs.length > 0) {
+                    content = Array.from(paragraphs)
+                        .map(p => p.textContent.trim())
+                        .filter(text => text.length > 20)
+                        .join('\n\n');
+                }
+            }
+
+            if (!content) {
+                contentElement = doc.querySelector('article') || doc.querySelector('.article-content') || doc.querySelector('main');
+                if (contentElement) {
+                    const paragraphs = contentElement.querySelectorAll('p');
+                    if (paragraphs.length > 0) {
+                        content = Array.from(paragraphs)
+                            .map(p => p.textContent.trim())
+                            .filter(text => text.length > 20)
+                            .join('\n\n');
+                    } else {
+                        content = contentElement.textContent;
+                    }
+                }
+            }
+
+            if (!content) content = 'Conteúdo não encontrado';
+            return content.replace(/\s+/g, ' ').trim();
+        }
+
+        function formatDate(dateString) {
+            if (!dateString || dateString === 'Data não encontrada') return 'Data não encontrada';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString;
+                return date.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch {
+                return dateString;
+            }
+        }
+
+        function isValidURL(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        function getDemoNews(url) {
+            let siteName = 'desconhecido';
+            let siteInfo = '';
+            
+            if (url.includes('g1.globo.com')) {
+                siteName = 'G1';
+                siteInfo = 'O G1 tem proteções CORS fortes.';
+            } else if (url.includes('uol.com.br')) {
+                siteName = 'UOL';
+                siteInfo = 'O UOL bloqueia requisições externas.';
+            }
+
+            return {
+                url: url,
+                title: `⚠️ Extração Bloqueada - ${siteName}`,
+                subtitle: `${siteInfo} Este é um exemplo demonstrativo.`,
+                date: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                author: 'Sistema - Modo Demonstração',
+                content: `🚫 BLOQUEIO DE SEGURANÇA (CORS)
+
+O site ${siteName} bloqueou a extração por segurança.
+
+Para extração real, você precisa de um backend (Node.js ou Python).
+
+Veja os exemplos no repositório GitHub do projeto.
+
+Este sistema demonstra perfeitamente a formatação WhatsApp que funcionará quando você implementar o backend.`
+            };
+        }
+
+        function displayNews(news) {
+            hideLoading();
+            hideError();
+            
+            newsLink.href = news.url;
+            newsLink.textContent = news.url;
+            newsTitle.textContent = news.title;
+            newsSubtitle.textContent = news.subtitle || 'Sem subtítulo';
+            newsDate.textContent = news.date;
+            newsAuthor.textContent = news.author;
+            newsContent.textContent = news.content;
+            
+            const whatsappText = formatForWhatsApp(news);
+            whatsappPreview.textContent = whatsappText;
+            
+            resultSection.style.display = 'block';
+        }
+
+        function formatForWhatsApp(news) {
+            let text = news.url + '\n\n';
+            text += `*${news.title}*\n\n`;
+            if (news.subtitle && news.subtitle !== 'Sem subtítulo') {
+                text += `_${news.subtitle}_\n\n`;
+            }
+            text += `📅 ${news.date}\n`;
+            if (news.author && news.author !== 'Não disponível') {
+                text += `✍️ ${news.author}\n`;
+            }
+            text += '\n' + news.content;
+            return text;
+        }
+
+        async function handleCopy() {
+            if (!extractedNews) return;
+
+            const whatsappText = formatForWhatsApp(extractedNews);
+
+            try {
+                await navigator.clipboard.writeText(whatsappText);
+                showCopyFeedback();
+            } catch (error) {
+                const textArea = document.createElement('textarea');
+                textArea.value = whatsappText;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showCopyFeedback();
+                } catch (error) {
+                    alert('Erro ao copiar. Copie manualmente o texto acima.');
+                }
+                
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function showCopyFeedback() {
+            copyFeedback.style.display = 'block';
+            setTimeout(() => { copyFeedback.style.display = 'none'; }, 3000);
+        }
+
+        function showLoading() {
+            loading.style.display = 'block';
+            resultSection.style.display = 'none';
+            errorSection.style.display = 'none';
+            extractBtn.disabled = true;
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+            extractBtn.disabled = false;
+        }
+
+        function showError(message) {
+            hideLoading();
+            errorMessage.textContent = message;
+            errorSection.style.display = 'block';
+            resultSection.style.display = 'none';
+        }
+
+        function hideError() {
+            errorSection.style.display = 'none';
+        }
+
+        function resetForm() {
+            urlInput.value = '';
+            resultSection.style.display = 'none';
+            errorSection.style.display = 'none';
+            extractedNews = null;
+            urlInput.focus();
+        }
+
+        urlInput.focus();
+    </script>
+</body>
+</html>
